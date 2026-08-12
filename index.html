@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+     <!DOCTYPE html>
 <html lang="ur-Latn">
 <head>
 <meta charset="UTF-8">
@@ -262,7 +262,11 @@ const CATEGORIES = [
    ================================================================ */
 const API_BASE = "https://hussainhub-backend-production.up.railway.app"; // <-- your live Railway backend
 // Optional: must match ADMIN_KEY in the backend's .env, if you set one.
-const ADMIN_KEY = "";
+// Admin Key is never hardcoded in this file — the admin types it in once
+// when opening the Admin role (stored only in this page's memory, never
+// saved to disk or sent anywhere except as the x-admin-key header on
+// admin-only requests). Reloading the page clears it.
+let ADMIN_KEY = "";
 
 const OFFLINE_MODE = !API_BASE;
 
@@ -305,6 +309,10 @@ async function apiSend(path, method, body, adminOnly){
   if(!res.ok){
     let msg = 'Request failed';
     try{ msg = (await res.json()).error || msg; }catch(e){}
+    if(res.status === 401){
+      ADMIN_KEY = ''; // wrong/expired key — clear it so the next admin action re-prompts
+      msg = 'Admin key ghalat thi. Dobara Admin par tap karke sahi key daalein.';
+    }
     throw new Error(msg);
   }
   return res.json();
@@ -362,6 +370,10 @@ const NAV = {
 document.getElementById('roleSwitch').addEventListener('click', e=>{
   const btn = e.target.closest('button[data-role]');
   if(!btn) return;
+  if(btn.dataset.role === 'admin' && !ADMIN_KEY){
+    const key = window.prompt('Admin Key daalein (sirf aapko pata honi chahiye):');
+    if(key) ADMIN_KEY = key.trim();
+  }
   state.role = btn.dataset.role;
   render();
 });
@@ -883,3 +895,4 @@ loadState();
 </script>
 </body>
 </html>
+   
